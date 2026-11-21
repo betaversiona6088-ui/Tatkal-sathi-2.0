@@ -1,0 +1,41 @@
+
+name: Build Tatkal Sathi APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download source code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Extract Android project
+        run: |
+          mkdir project
+          unzip -q TatkalSathi-Android-GitHub-Project.zip -d project
+
+      - name: Find and build Android app
+        run: |
+          cd project
+          chmod +x $(find . -name gradlew -type f | head -1)
+          cd $(dirname $(find . -name gradlew -type f | head -1))
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tatkal-Sathi-APK
+          path: project/**/build/outputs/apk/debug/*.apk
+          
