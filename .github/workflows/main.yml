@@ -1,4 +1,3 @@
-
 name: Build Tatkal Sathi APK
 
 on:
@@ -21,16 +20,26 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Extract Android project
+      - name: Extract Android project if zip exists
         run: |
-          mkdir project
-          unzip -q TatkalSathi-Android-GitHub-Project.zip -d project
+          mkdir -p project
+          if [ -f "TatkalSathi-Android-GitHub-Project.zip" ]; then
+            unzip -q TatkalSathi-Android-GitHub-Project.zip -d project
+          else
+            cp -r . project/
+          fi
 
       - name: Find and build Android app
         run: |
           cd project
-          chmod +x $(find . -name gradlew -type f | head -1)
-          cd $(dirname $(find . -name gradlew -type f | head -1))
+          GRADLEW_PATH=$(find . -name gradlew -type f | head -n 1)
+          if [ -z "$GRADLEW_PATH" ]; then
+            echo "Error: gradlew not found in project!"
+            exit 1
+          fi
+          GRADLE_DIR=$(dirname "$GRADLEW_PATH")
+          chmod +x "$GRADLEW_PATH"
+          cd "$GRADLE_DIR"
           ./gradlew assembleDebug
 
       - name: Upload APK
